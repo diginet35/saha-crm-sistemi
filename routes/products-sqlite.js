@@ -1,45 +1,60 @@
+// routes/products.js
 const express = require('express');
-const sqlite3 = require('sqlite3').verbose();
-const path = require('path');
 const router = express.Router();
+const pool = require('../config/database');
 
-const dbPath = path.join(__dirname, '..', 'database', 'saha_crm.db');
-const db = new sqlite3.Database(dbPath);
-
-// Tüm ürünleri listele
-router.get('/', (req, res) => {
-  db.all('SELECT * FROM products ORDER BY created_at DESC', (err, products) => {
-    if (err) return res.status(500).json({ error: err.message });
-    res.json(products);
-  });
+// 📌 Tüm ürünleri listele
+router.get('/', async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM products ORDER BY id DESC');
+    res.json(result.rows);
+  } catch (err) {
+    console.error('Ürünleri çekerken hata:', err);
+    res.status(500).json({ error: 'Ürünler alınamadı' });
+  }
 });
 
-// Yeni ürün ekle
-router.post('/', (req, res) => {
-  const { name, description, unit_price, vat_rate, price_with_vat, unit } = req.body;
-  
-  db.run(
-    'INSERT INTO products (name, description, unit_price, vat_rate, price_with_vat, unit) VALUES (?, ?, ?, ?, ?, ?)',
-    [name, description, unit_price, vat_rate || 20, price_with_vat, unit || 'adet'],
-    function(err) {
-      if (err) return res.status(500).json({ error: err.message });
-      res.json({ id: this.lastID, message: 'Ürün oluşturuldu' });
-    }
-  );
+// 📌 Yeni ürün ekle
+router.post('/', async (req, res) => {
+  const { name, price, stock } = req.body;
+  try {
+    const result = await pool.query(
+      'INSERT INTO products (name, price, stock) VALUES ($1, $2, $3) RETURNING *',
+      [name, price, stock]
+    );
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error('Ürün eklenemedi:', err);
+    res.status(500).json({ error: 'Ürün eklenemedi' });
+  }
 });
 
-// Ürün güncelle
-router.put('/:id', (req, res) => {
-  const { name, description, unit_price, vat_rate, price_with_vat, unit, is_active } = req.body;
-  
-  db.run(
-    'UPDATE products SET name = ?, description = ?, unit_price = ?, vat_rate = ?, price_with_vat = ?, unit = ?, is_active = ? WHERE id = ?',
-    [name, description, unit_price, vat_rate, price_with_vat, unit, is_active, req.params.id],
-    function(err) {
-      if (err) return res.status(500).json({ error: err.message });
-      res.json({ message: 'Ürün güncellendi' });
-    }
-  );
+// 📌 Ürün güncelle
+router.put('/:id', async (req, res) => {
+  const { id } = req.params;
+  const { name, price, stock } = req.body;
+  try {
+    const result = await pool.query(
+      'UPDATE products SET name=$1, price=$2, stock=$3 WHERE id=$4 RETURNING *',
+      [name, price, stock, id]
+    );
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error('Ürün güncellenemedi:', err);
+    res.status(500).json({ error: 'Ürün güncellenemedi' });
+  }
+});
+
+// 📌 Ürün sil
+router.delete('/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    await pool.query('DELETE FROM products WHERE id=$1', [id]);
+    res.json({ message: 'Ürün silindi' });
+  } catch (err) {
+    console.error('Ürün silinemedi:', err);
+    res.status(500).json({ error: 'Ürün silinemedi' });
+  }
 });
 
 module.exports = router;
