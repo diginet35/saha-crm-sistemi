@@ -200,3 +200,25 @@ CREATE TABLE visits (
   notes TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+-- Varsayılan admin rolü
+INSERT INTO roles (name) VALUES ('admin')
+ON CONFLICT (name) DO NOTHING;
+
+-- Varsayılan admin departmanı
+INSERT INTO departments (name) VALUES ('Genel Yönetim')
+ON CONFLICT (name) DO NOTHING;
+
+-- Varsayılan admin kullanıcı
+INSERT INTO users (username, email, full_name, phone, password_hash, role_id, department_id, is_active)
+VALUES (
+  'admin',
+  'admin@example.com',
+  'Sistem Yöneticisi',
+  '0000000000',
+  -- şifre: admin123
+  '$2a$10$u1a1A1r9WqF5O5VKn0dNfOwV8G8oUg4s9g7aZpROkVkJtFlk2P4Ga',
+  (SELECT id FROM roles WHERE name = 'admin'),
+  (SELECT id FROM departments WHERE name = 'Genel Yönetim'),
+  TRUE
+)
+ON CONFLICT (username) DO NOTHING;
