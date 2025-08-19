@@ -4,9 +4,9 @@
   "description": "Saha Operasyonları CRM Sistemi",
   "main": "server.js",
   "scripts": {
-    "start": "node server-sqlite.js",
+    "start": "node server.js",
     "test": "node test-server.js",
-    "setup": "node setup-sqlite.js"
+    "setup": "node setup-postgres.js"
   },
   "dependencies": {
     "bcryptjs": "latest",
@@ -16,7 +16,7 @@
     "jsonwebtoken": "latest",
     "nodemailer": "^7.0.5",
     "pdfkit": "^0.17.1",
-    "sqlite3": "latest",
+    "pg": "latest",
     "xlsx": "^0.18.5"
   }
 }
