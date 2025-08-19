@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node server.js",
     "test": "node test-server.js",
-    "setup": "node setup-postgres.js"
+    "setup": "node setup-postgres.js",
+    "pg:apply": "node scripts/apply-schema.js"
   },
   "dependencies": {
     "bcryptjs": "latest",
